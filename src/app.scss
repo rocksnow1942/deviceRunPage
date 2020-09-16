@@ -1,0 +1,62 @@
+@import "~bootstrap/scss/bootstrap"; 
+
+.tab-pane {
+    // border-top-style: none;
+    border-left-style:  solid;
+    border-left-width: 1px;
+    border-left-color: lightgrey;
+    border-right-style:  solid;
+    border-right-width: 1px;
+    border-right-color: lightgrey;
+    border-bottom-style:  solid;
+    border-bottom-width: 1px;
+    border-bottom-color: lightgrey;
+    // border:  1px solid lightgrey;
+    border-radius: 1px 1px 10px 10px;
+    padding: 10px;
+}
+
+.status {
+    padding: 5px 5px 5px 5px;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.boarder-well {
+    margin: 15px;
+    padding: 15px 0 15px 0;
+    border-radius: 15px;
+    background-color: lightyellow;
+}
+
+.control-panel {
+    padding: 10px;
+    background-color: lightyellow;
+    border-radius: 10px;
+}
+ 
+.badge {
+    vertical-align: middle;
+}
+
+.methoddisplay {
+    min-height: 100px;
+    padding: 0px 0px 10px 0px;
+    ul{
+        list-style-type: none;
+        padding: 5px;
+        margin: 0px;
+        font-size: 11px;
+        font-family: monospace;
+    }
+}
+
+
+#alert {
+    position: fixed;
+    z-index: 99;
+    width: 50%;
+    left: 25%;
+    top: 10%;
+}
