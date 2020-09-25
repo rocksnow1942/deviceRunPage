@@ -308,6 +308,7 @@ export class ResultTab {
             let currentData = d.data ? (
                 _.map(d.data.scan, (data, channel) => {
                     let xyData = _.zip(data.time, data.fit).map(([t, fit]) => ({ x: t ? t.toFixed(2) : 0, y: fit ? fit.pc.toFixed(2) : 0 }))
+                    let color = this.color(i, channel);
                     return {
                         label: d.meta.name + '-' + channel,
                         pointHoverBorderColor: this.color(i + 6,channel),
@@ -315,7 +316,8 @@ export class ResultTab {
                         yAxisID: 'current',
                         pointRadius: 2,
                         pointHoverRadius: 6,
-                        backgroundColor: this.color(i, channel),
+                        backgroundColor: color,
+                        pointHoverBackgroundColor: color,
                         dataIndex: dataIndex,
                         channel: channel,
                         data: xyData,
@@ -326,14 +328,16 @@ export class ResultTab {
             ) : []
 
             // generate temperature Data array
+            let tempcolor = this.color(i + 999);
             let tempData = { // this is the temperature data
                 label: d.meta.name + '-T',
-                pointHoverBorderColor: this.color(i),
+                pointHoverBorderColor: this.color(),
                 xAxisID: 'time',
                 yAxisID: 'temperature',
                 pointRadius: 2,
                 pointHoverRadius: 6,
-                backgroundColor: this.color(i + 6),
+                backgroundColor: tempcolor,
+                pointHoverBackgroundColor: tempcolor,
                 dataType: 'Temperature',
                 data: d.data ? _.zip(d.data.temperature.time, d.data.temperature.data).map(([t, temp]) => ({ x: t ? t.toFixed(2) : 0, y: temp ? temp.toFixed(2) : 0 })) : []
             }
@@ -342,6 +346,7 @@ export class ResultTab {
             let fluidFillData = (d.data && indexes.length == 1) ? (
                 _.map(d.data.fluidFill, (data, channel) => {
                     let xyData = _.zip(data.time, data.data).map(([t, d]) => ({ x: t ? t.toFixed(2) : 0, y: d ? d.toFixed(2) : 0 }))
+                    let color =  this.color(i + 6,channel);
                     return {
                         label: d.meta.name + '-' + channel + '-FF',
                         pointHoverBorderColor: this.color(i + 6,channel),
@@ -349,7 +354,8 @@ export class ResultTab {
                         yAxisID: 'temperature',
                         pointRadius: 2,
                         pointHoverRadius: 6,
-                        backgroundColor: this.color(i, channel, true),
+                        backgroundColor: color,
+                        pointHoverBackgroundColor: color,
                         dataType: 'Fluid Fill',
                         data: xyData
                     }
