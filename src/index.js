@@ -219,8 +219,7 @@ class App {
         this.send({"action":"measurement.getPicoStatus"})
     }
     getUpTime() {
-        this.intervalCallbacks.push ( setInterval(() => {
-            console.log('get up time');
+        this.intervalCallbacks.push ( setInterval(() => {        
             this.send({"action":"main.getUpTime"})    
         }, 1000));
     }
