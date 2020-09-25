@@ -102,7 +102,7 @@ export class ResultTab {
     send(msg) {
         if (this.ws && this.ws.readyState == 1) {
             this.ws.send(JSON.stringify(msg))
-        } else  this.app.showAlert('Data WebSocket Not Connected.', 'warning')        
+        }
     }
 
     requestData(page, perpage) {         

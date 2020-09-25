@@ -39,6 +39,7 @@ class App {
         this.addEventListener()
         this.picoMethods = {}
         this.picoIsRunning = false
+        this.intervalCallbacks = []
         this.confirmDialog = new ConfirmDialog()
         this.runChart = new RunChart(this)
         this.resultTab = new ResultTab(this)
@@ -46,7 +47,9 @@ class App {
     send (msg) {
         if (this.ws && this.ws.readyState==1) {
             this.ws.send(JSON.stringify(msg))
+            return true
         }
+        return false
     }
 
     secondsToMinSec(time){
@@ -75,11 +78,13 @@ class App {
         this.ws.onclose =  (e) => {
             this.reconnect.removeClass('btn-success btn-danger').addClass('btn-warning')
             this.reconnect.html('<i class="fas fa-redo"></i> Reconnect')
+            this.clearIntervalCallback()
             this.ws = null
         }
         this.ws.onerror = (e)=>{
             this.reconnect.removeClass('btn-success btn-warning').addClass('btn-danger')
             this.reconnect.html('<i class="fas fa-exclamation-circle"></i> Error')
+            this.clearIntervalCallback()
             this.ws=null
         }
         this.ws.onmessage =  (e) => {
@@ -106,6 +111,8 @@ class App {
                             waiting:['&nbsp;Waiting&nbsp;',time,'warning'],
                             running:['&nbsp;Running&nbsp;',time,'warning'],
                             error:['&nbsp;Error&nbsp;',time,'danger'],
+                            done:['&nbsp;Done&nbsp;',time,'warning'],
+                            unknown:['&nbsp;Unknown&nbsp;',time,'danger'],
                         }[data.status];
                         this.picoStatus.html(disp[0])
                         this.picoStatus.removeClass().addClass(`badge badge-${disp[2]}`)
@@ -177,6 +184,11 @@ class App {
         }
     }
 
+    clearIntervalCallback(){
+        this.intervalCallbacks.forEach(i=>{clearInterval(i)})
+        this.intervalCallbacks = []
+    }
+
     showToast(packet) {
         let time = (new Date()).toLocaleString().split(',')[1].trim();
         let toast = `
@@ -207,17 +219,16 @@ class App {
         this.send({"action":"measurement.getPicoStatus"})
     }
     getUpTime() {
-        this.send({"action":"main.getUpTime"})
-        setTimeout(() => {
-            this.getUpTime()
-        }, 1000);
+        this.intervalCallbacks.push ( setInterval(() => {
+            console.log('get up time');
+            this.send({"action":"main.getUpTime"})    
+        }, 1000));
     }
     getHeatingStatus() {
-        this.send({"action":"heating.getCurrentTemp"});
-        this.send({"action":"heating.getTempControllingTime"},);
-        setTimeout(() => {
-            this.getHeatingStatus()
-        }, 3000) 
+        this.intervalCallbacks.push(setInterval(() => {
+            this.send({"action":"heating.getCurrentTemp"});
+            this.send({"action":"heating.getTempControllingTime"},);
+        }, 3000));       
     }
 
     showAlert(msg,mode,timeout=2000) {
