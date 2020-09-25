@@ -10,60 +10,126 @@ export class RunChart {
         this.traceChart = $('#trace-chart')
         this.peakChart = $('#peak-chart')
         this.app = app
-        this.data = {time:[],rawdata:[],fit:[],temp:[]}
+        this.data = {}
         this.picoRunning = false
         this.plot()
     }
+
+    dataLength () {
+        // return field length of all data
+        return {
+            scan: this.data.scan ? _.mapValues(this.data.scan,(data)=>(data.time?data.time.length:0)) :{},
+            temperature: this.data.temperature? (this.data.temperature.time?this.data.temperature.time.length:0):0,
+            fluidFill: this.data.fluidFill? (_.mapValues(this.data.fluidFill,(data)=>(data.time?data.time.length:0)) ) :{}
+        }
+    }
+
     start() {
         // this.data = {time:[],rawdata:[],fit:[],temp:[]};
         if (!this.picoRunning) {
             this.picoRunning = true;
-            this.data = {time:[],rawdata:[],fit:[],temp:[]};
-            this.chart.data.datasets[0].data=[]
-            this.chart.data.datasets[1].data=[]
-            this.app.send({"action":"dataProcess.getIthData","i":this.data.time.length})
+            this.data = {};
+            this.chart.data.datasets.splice(1,this.chart.data.datasets.length-1);
+            this.chart.data.datasets[0].data=[];
+            this.chart.update()
+            this.app.send({"action":"dataProcess.getData","dataLengthDict": this.dataLength()})
         } 
         
     }
  
-    getData() {
-        if (this.picoRunning) {
-            this.app.send({"action":"dataProcess.getIthData","i":this.data.time.length})
-        } else {
-            this.data = {time:[],rawdata:[],fit:[],temp:[]}
-            this.app.send({"action":"dataProcess.getIthData","i":0}) 
-            this.picoRunning = true
-            this.chart.data.datasets[0].data=[]
-            this.chart.data.datasets[1].data=[]
-        }
-    }
     stop() {
         this.picoRunning = false
         clearTimeout(this.addDataTimeout)
     }
-    addData(data) {
-        let next = this.data.time.length;
-        if (data.time.length) {
-            _.forEach(data,(val,key)=>{this.data[key].push(val[0])})
-            this.chart.data.datasets[0].data.push({x:data.time[0].toFixed(2),y:data.fit[0].pc.toFixed(2)})
-            this.chart.data.datasets[1].data.push({x:data.time[0].toFixed(2),y:data.temp[0].toFixed(1)})
-            this.chart.update()
-            this.updatePeak(this.data.time.length-1)
-            this.addDataTimeout = setTimeout(() => {
-                this.app.send({"action":"dataProcess.getIthData","i":next+1})
-            }, 100);
-        } else {
-            this.addDataTimeout = setTimeout(() => {
-                this.app.send({"action":"dataProcess.getIthData","i":next})
-            }, 4000);
-        }
+    
+    getChannelScanColor(channel){
+        const colors = [ 'red','GREEN','blue','BLACK','DEEPPINK',]
+        return colors[ channel.slice(1) % colors.length ]
     }
-    updatePeak(idx) {
-        let rawdata = this.data.rawdata[idx]
-        let fit = this.data.fit[idx]
-        let time = this.data.time[idx]
-        this.peak.options.title.text = `Peak Fit | ${time.toFixed(2)} min - ${fit.pc.toFixed(2)}uA`
-        this.peak.data.datasets[0].data = _.zip(...rawdata).map(([x,y])=>({x,y}))
+    getChannelFluidFillColor(channel){
+        const colors = [ 'SANDYBROWN', 'LIGHTSEAGREEN','DEEPSKYBLUE','SLATEGRAY','CORAL', ]
+        return colors[ channel.slice(1) % colors.length ]
+    }
+
+    addData(data) {
+        // merge the incoming data with this.data 
+        _.mergeWith(this.data, data, (objValue,srcValue,)=>{
+            if (_.isArray(objValue)) return objValue.concat(srcValue)
+        })
+
+        
+        // update temperature
+        if (data.temperature.time){
+            let tempData = _.zip(data.temperature.time,data.temperature.data).map(([t,temp])=>({x:t.toFixed(2),y:temp.toFixed(1)}))
+            this.chart.data.datasets[0].data.push(...tempData)
+        }
+        
+        // update scan graph
+        _.forEach(data.scan,(data,channel)=>{
+            let dataset = _.find(this.chart.data.datasets,o=>o.label===channel)
+            let xyData = _.zip(data.time,data.fit).map(([t,fit])=>({x:t.toFixed(2),y:fit.pc.toFixed(2)}))
+            
+            if (dataset){
+                dataset.data.push(...xyData)
+            } else {
+                this.chart.data.datasets.push({
+                    label:channel,
+                    xAxisID:'time',
+                    yAxisID: 'current',
+                    pointRadius: 2,
+                    pointHoverRadius:6,
+                    backgroundColor: this.getChannelScanColor(channel),
+                    dataType:'Current',
+                    data:xyData,
+                })
+            }
+            // if new data is appended to this channel, update this peak.
+            if (xyData.length>0){
+                // update peak
+                this.updatePeak(channel, this.data.scan[channel].time.length-1)
+            }
+        })
+
+    
+        // // update fluidFill
+        _.forEach(data.fluidFill,(data,channel)=>{
+            let dataset = _.find(this.chart.data.datasets,o=>o.label===channel+'-FF')
+            let xyData = _.zip(data.time,data.data).map(([t,d])=>({x:t.toFixed(2),y:d.toFixed(2)}))
+            if (dataset){
+                dataset.data.push(...xyData)
+            } else {
+                this.chart.data.datasets.push({
+                    label:channel+'-FF',
+                    xAxisID:'time',
+                    yAxisID: 'temp',
+                    pointRadius: 2,
+                    borderColor:this.getChannelFluidFillColor(channel),
+                    backgroundColor: 'white',
+                    dataType:'Fluid Fill',
+                    data:xyData,
+                })
+            }
+        })
+        
+        
+        // update chart.
+        
+        this.chart.update()
+    
+        // fetch data after 4000 ms.
+        this.addDataTimeout = setTimeout(() => {
+            this.app.send({"action":"dataProcess.getData","dataLengthDict": this.dataLength()})
+        }, 4000);
+    }
+
+    updatePeak(channel,idx) {
+        let rawdata = this.data.scan[channel].rawdata[idx]
+        let fit = this.data.scan[channel].fit[idx]
+        let time = this.data.scan[channel].time[idx]
+        this.peak.options.title.text = `Peak ${channel} - ${time.toFixed(2)}min - ${fit.pc.toFixed(2)}uA`;
+        let step = (rawdata[0][1]-rawdata[0][0])/(rawdata[0][2]-1);
+        let voltage = Array.from({length:rawdata[0][2]},(_,k)=>(rawdata[0][0] + k*step ))
+        this.peak.data.datasets[0].data = _.zip(voltage,rawdata[1]).map(([x,y])=>({x,y}))
         let pv = fit.pv;
         let pc = fit.pc;
         let k = (fit.fy[1]-fit.fy[0])/(fit.fx[1]-fit.fx[0])
@@ -157,24 +223,14 @@ export class RunChart {
             type:'scatter',
             data:{ 
                 datasets:[
-                    {label:'Current',
-                    pointHoverBorderColor:'cyan',
-                    xAxisID:'time',
-                    yAxisID: 'current',
-                    pointRadius: 2,
-                    pointHoverRadius:6,
-                    backgroundColor: 'red',
-                    data:[
-                        
-                    ]},
-                    {   label:'Temperature',
+                    {label:'Temperature',
                      xAxisID:'time',
                     yAxisID: 'temp',
                     pointRadius: 2,
-                    borderColor:'green',
-                    backgroundColor: 'white',
+                    borderColor:'FUCHSIA',
+                    backgroundColor: 'LIGHTCYAN',
+                    dataType:'Temperature',
                     data:[
-                       
                     ]}
                     
                 ]
@@ -192,11 +248,32 @@ export class RunChart {
 					display: true,
 					text: 'Pico Trace'
                 },
+                tooltips: {
+                    backgroundColor: '#FFFFF0',
+                    titleFontSize: 14,
+                    titleFontColor: '#0066ff',
+                    bodyFontColor: '#000',
+                    bodyFontSize: 13,
+                    displayColors: false,
+                    callbacks: {
+                        title: (tooltipItem, data) => (data.datasets[tooltipItem[0].datasetIndex].label),
+                        label: (tooltipItem, data) => {
+
+                            return ` Time : ${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].x} min`
+                        },
+                        afterLabel: (tooltipItem, data) => {
+                            return ` ${data.datasets[tooltipItem.datasetIndex].dataType} : ${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y}`
+                        }
+                    }
+                },
                 onHover: (e,ae)=>{
                     if (ae.length) {
                         $('html,body').css('cursor','pointer');
-                        if (ae[0]._datasetIndex==0){
-                            this.updatePeak(ae[0]._index)
+                        if (this.chart.data.datasets[ae[0]._datasetIndex].yAxisID=='current'  ){
+                            let channel = this.chart.data.datasets[ae[0]._datasetIndex].label;
+                            let index = ae[0]._index
+                            
+                            this.updatePeak(channel,index)
                         }
                     } else {
                         $('html,body').css('cursor','default');

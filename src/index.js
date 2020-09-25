@@ -8,17 +8,33 @@ import './app.scss';
 import '@fortawesome/fontawesome-free/css/all.css';
 import '@fortawesome/fontawesome-free/js/all.js';
 
+/* 
+Have to add following 
+@import "../../../../bootstrap/scss/functions";
+@import "../../../../bootstrap/scss/variables";
+to 'bootstrap-switch/src/sass/bootstrap4/bootstrap-switch.scss'
+to avoid import error.
+*/
+import 'bootstrap-switch/src/sass/bootstrap4/bootstrap-switch.scss'
+import 'bootstrap-switch';
+
 
 
 class App {
     constructor () {
+        
         this.picoStatus = $('#pico-status')
+        this.picoStatusTooltip = $('#picostatus-tooltip')
         this.temperature = $('#temperature')
         this.remainingTime = $('#remaining-time')
         this.uptime = $('#uptime') 
         this.reconnect = $('#connectBtn')
         this.method = $('#method')
         this.methodDisplay = $('#methodDisplay')
+        this.picoDevModeToggle = $('#pico-devMode-toggle')
+        this.picoDevModeToggle.bootstrapSwitch('size','small');
+        
+        
         this.initWebsocket()
         this.addEventListener()
         this.picoMethods = {}
@@ -54,6 +70,7 @@ class App {
             this.getHeatingStatus()
             this.getUpTime()
             this.send({"action":"heating.getGoalTemp"})
+            
         };
         this.ws.onclose =  (e) => {
             this.reconnect.removeClass('btn-success btn-danger').addClass('btn-warning')
@@ -94,6 +111,17 @@ class App {
                         this.picoStatus.removeClass().addClass(`badge badge-${disp[2]}`)
                         this.remainingTime.html(`${disp[1]}`)
                         this.remainingTime.removeClass().addClass(`badge badge-${disp[2]}`)
+                        if (data.reason && data.reason!=this.picoStatusTooltip.attr('data-original-title')) {
+                            this.picoStatusTooltip.attr('title',data.reason)
+                            this.picoStatusTooltip.tooltip('dispose')
+                            this.picoStatusTooltip.tooltip()
+                            this.picoStatusTooltip.tooltip('show')
+                            
+                        } else if (!data.reason) {
+                            this.picoStatusTooltip.attr('data-original-title',"")
+                            this.picoStatusTooltip.tooltip('dispose')
+                        }
+
                         if (data.status !== 'idle' && data.status!=='error') {
                             setTimeout(() => {
                                 this.getPicoStatus()
@@ -132,8 +160,11 @@ class App {
                     case 'main.getUpTime':
                         this.uptime.text(this.secondsToMinSec(data))
                         break
-                    case 'dataProcess.getIthData':
+                    case 'dataProcess.getData':
                         this.runChart.addData(data)
+                        break
+                    case 'measurement.devMode':                        
+                        this.picoDevModeToggle.bootstrapSwitch('state',data)                        
                         break
                     default:
                         this.showToast(packet)
@@ -208,7 +239,7 @@ class App {
                 }, 500);
             }, timeout);
         } else {
-            newElement.find('.close').click(e=>{
+            newElement.find('.close').on('click',e=>{
                 newElement.slideUp();
                 setTimeout(() => {
                     newElement.remove()
@@ -219,8 +250,14 @@ class App {
     }
 
     addEventListener () {
+       
+        this.picoDevModeToggle.bootstrapSwitch('onSwitchChange',(e,state)=>{
+            // console.log($("[name='my-checkbox']").bootstrapSwitch('state'));
+            this.send({action:'measurement.setDevMode',devMode:state})            
+        });
+       
         // reconnect button
-        this.reconnect.click(e=>{
+        this.reconnect.on('click',e=>{
             if ( !this.ws || this.ws.readyState != 1) {
                 this.initWebsocket()
                 this.resultTab.initWebsocket()
@@ -228,15 +265,18 @@ class App {
         })
 
         // method selectioin
-        this.method.click(e=>{
+        this.method.on('click',e=>{
             this.send({"action":"measurement.getPicoMethod"})
         })
-        this.method.change(e=>{
+        this.method.on('change',e=>{
             let method = this.method.val();
             if (method in this.picoMethods) {
                 this.methodDisplay.html("")
-                _.forEach(this.picoMethods[method],(val,key)=>{
-                    this.methodDisplay.append(`<li><b>${key}</b> : ${val}</li>`)
+                _.forEach(this.picoMethods[method],(settings,channel)=>{
+                    this.methodDisplay.append(`<li><strong><u>Channel ${channel}</u></strong></li>`)
+                    _.forEach(settings,(value,key)=>{
+                        this.methodDisplay.append(`<li><b>${key}:</b> ${value}</li>`)
+                    })
                 })
                 $('#selected-method').text(method)
             } else {
@@ -245,15 +285,24 @@ class App {
         })
 
         // temp control 
-        $('#temp-control-btn').click(e=>{
+        $('#temp-control-btn').on('click',e=>{
             $('#temp-dialog').modal('show')
         });
-        $('#start-temp-control').click(e=>{
+        // pico control 
+        $('#pico-control-btn').on('click',e=>{
+            
+            $('#pico-dialog').modal('show');
+            // have to send this message because the slider state cannot be set when modal is not shown.
+            this.send({"action":"measurement.devMode"})
+            
+        })
+
+        $('#start-temp-control').on('click',e=>{
             let goal = +$('#goal-temp').val();
             this.send({"action":"heating.setGoalTemp","temp":goal})
             this.send({"action":"heating.startTempControl"})
         });
-        $('#stop-temp-control').click(e=>{
+        $('#stop-temp-control').on('click',e=>{
              
             this.confirmDialog.confirm('<h4>Are you sure to stop heating? </h4> ',()=>{
                 this.send({"action":"heating.stopTempControl"})
@@ -263,17 +312,17 @@ class App {
 
 
         // start button 
-        $('#start-button').click(e=>{
+        $('#start-button').on('click',e=>{
             if (this.picoIsRunning) {
                 this.confirmDialog.confirm('<h4>Are you sure to stop?</h4>',()=>{
                     this.send( {"action":"measurement.stopPico"} )
                 })
             } else {
                 $('#meta-dialog').modal('show')
-            }
-            
+            }   
         }) 
-        $('#start-test').click(e=>{
+
+        $('#start-test').on('click',e=>{
             let method = this.method.val();
             let temp =  +document.getElementsByClassName('current-goal-temp')[0].textContent;
             let deltaT= 5;

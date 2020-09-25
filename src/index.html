@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- <link rel="stylesheet" href="bundle.css"> -->
+    
     <title>Run Page</title>
 </head>
 <body>
@@ -45,8 +46,8 @@
       <div class="row boarder-well">
 
         <div class="col-sm-3 ">
-          <div class="card shadow">
-            <div class="card-body  status">
+          <div class="card shadow" id='pico-control-btn'>
+            <div id="picostatus-tooltip" class="card-body  status" data-toggle="tooltip" data-placement="top" title="">
                Pico Status:&nbsp;&nbsp;<span id='pico-status' class="badge badge-secondary">Unknown</span> 
             </div>
           </div>
@@ -92,17 +93,12 @@
               </select>
 
             </div>
-            
+            <button id='start-button' type="button" class="btn btn-block btn-lg btn-outline-primary">START</button>
+            <hr>
             <div class="methoddisplay">
               <ul id='methodDisplay'>
               </ul>
-            </div>
-
-           
-         
-
-
-            <button id='start-button' type="button" class="btn btn-block btn-lg btn-outline-primary">START</button>
+            </div>            
           </div>
         </div>
 
@@ -129,7 +125,7 @@
 
 
     <!-- result tab -->
-    <div class="tab-pane " id="result" role="tabpanel" aria-labelledby="result-tab">
+    <div class="tab-pane" id="result" role="tabpanel" aria-labelledby="result-tab">
       
       <div class="row">
         <div class="col-sm-3">
@@ -154,7 +150,13 @@
             <div class="col-sm-6">
               <button id=result-next type="button" class="btn btn-sm btn-block btn-outline-dark">Next <i class="fas fa-arrow-right"></i>  </button>
             </div>
-          </div>          
+          </div>       
+          <br>
+          <div class="row">
+            <div class="col-sm-6">
+              <button id=result-delete type="button" class="btn btn-sm btn-block btn-outline-dark"><i class="fas fa-trash"></i> Delete </button>
+            </div>            
+          </div>   
         </div>
 
         <div class="col-sm-9">
@@ -289,7 +291,7 @@
             <div class="input-group-prepend">
               <span class="input-group-text">Set Goal Temperature</span>
             </div>
-            <input type="text" id='goal-temp' class="form-control" aria-label="Dollar amount (with dot and two decimal places)" value=65>
+            <input type="text" id='goal-temp' class="form-control"  value=65>
             <div class="input-group-append">
               <span class="input-group-text">&#8451;</span>
             </div>
@@ -308,11 +310,42 @@
               <button type="button" class="btn btn-block btn-outline-secondary btn-sm" data-dismiss="modal">Close</button>
             </div>
           </div>
+        </div>        
+      </div>
+    </div>
+  </div>
 
-
+  <div id='pico-dialog' class="modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header" >
+          <h5 class="modal-title" >Pico Settings</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
-       
-        
+        <div class="modal-body">
+          
+          <div class="row">
+            <div class="col-8">
+              <h4 align='center'>Dev Mode</h4>              
+            </div>
+            <div class="col-4">
+              <input type="checkbox" id="pico-devMode-toggle" checked='checked'>
+            </div>
+          </div>
+          
+
+          <hr>
+          <div class="row" >
+            <div class="col-sm-4">
+            </div>
+            <div class="col-sm-4">
+              <button type="button" class="btn btn-block btn-outline-secondary btn-sm" data-dismiss="modal">Close</button>
+            </div>
+            
+          </div>
+        </div>        
       </div>
     </div>
   </div>
@@ -369,7 +402,7 @@
 
 <script>
   // use this fixed address for development.
-  //var websocketAddr = "ws://192.168.86.143:8765";
+  //var websocketAddr = "ws://192.168.86.178:8765";
   
   // change address to Jinja template for device usage.
   var websocketAddr = "{{websocketAddr}}";
