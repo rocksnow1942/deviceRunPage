@@ -52,6 +52,7 @@ export class RunChart {
     }
 
     addData(data) {
+        if (this.picoRunning ) {
         // merge the incoming data with this.data 
         _.mergeWith(this.data, data, (objValue,srcValue,)=>{
             if (_.isArray(objValue)) return objValue.concat(srcValue)
@@ -117,9 +118,11 @@ export class RunChart {
         this.chart.update()
     
         // fetch data after 4000 ms.
-        this.addDataTimeout = setTimeout(() => {
-            this.app.send({"action":"dataProcess.getData","dataLengthDict": this.dataLength()})
-        }, 4000);
+        
+            this.addDataTimeout = setTimeout(() => {
+                this.app.send({"action":"dataProcess.getData","dataLengthDict": this.dataLength()})
+            }, 4000);
+        }
     }
 
     updatePeak(channel,idx) {

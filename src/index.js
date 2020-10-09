@@ -168,6 +168,7 @@ class App {
                         this.uptime.text(this.secondsToMinSec(data))
                         break
                     case 'dataProcess.getData':
+                        console.log('received Data');
                         this.runChart.addData(data)
                         break
                     case 'measurement.devMode':                        
@@ -335,17 +336,17 @@ class App {
         $('#start-test').on('click',e=>{
             let method = this.method.val();
             let temp =  +document.getElementsByClassName('current-goal-temp')[0].textContent;
-            let deltaT= 5;
             let name = $('#test-name').val().trim()
             let exp = $('#test-exp').val()
             let desc = $('#test-desc').val()
+            let deltaT = 0.5
             if (method in this.picoMethods) {
                 if (name) {
                     // measurement meta info: {method, deltaT, temp, name, exp, desc}
                     this.send({
                         meta:{method,deltaT,temp,name,exp,desc},
                         method:method,
-                        deltaT:5,
+                        deltaT:deltaT,
                         action:'measurement.startMeasure'
                     })
                     setTimeout(() => {

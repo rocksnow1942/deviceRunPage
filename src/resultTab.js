@@ -195,7 +195,7 @@ export class ResultTab {
             <li>Method : ${fD.meta.method}  </li>
             <li>deltaT : ${fD.meta.deltaT}  </li>
             <li>GoalTemp : ${fD.meta.temp}  </li>
-            <li>Status : ${fD.status}  </li>
+            <li>Status : ${JSON.stringify(fD.status)}  </li>
             <li>Result : ${fD.result}  </li>
             `)
                 // update result inputs 
