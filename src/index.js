@@ -2,6 +2,7 @@ import $ from 'jquery';
 import _ from 'lodash';
 import {RunChart} from './runChart'
 import {ConfirmDialog} from './confirmDialog'
+import {InputDialog, inputDialog} from './inputDialog'
 import {ResultTab} from './resultTab' 
 import 'bootstrap'
 import './app.scss';
@@ -35,14 +36,14 @@ class App {
         this.picoDevModeToggle.bootstrapSwitch('size','small');
         
         
-        this.initWebsocket()
-        this.addEventListener()
         this.picoMethods = {}
         this.picoIsRunning = false
         this.intervalCallbacks = []
         this.confirmDialog = new ConfirmDialog()
+        this.inputDialog = new InputDialog('#input-dialog')
         this.runChart = new RunChart(this)
         this.resultTab = new ResultTab(this)
+        this.addEventListener()
     }
     send (msg) {
         if (this.ws && this.ws.readyState==1) {
@@ -63,12 +64,18 @@ class App {
     }
 
     initWebsocket() {
+        if (!websocketAddr){
+            this.showAlert('Set Reader ID first.','danger')
+            return
+        }
         this.ws = new WebSocket(websocketAddr)
+        $('#connectBtn').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Connecting...')
+                        
         // ws events 
         this.ws.onopen = (e) => {
-            this.reconnect.removeClass('btn-warning btn-danger').addClass('btn-success')
-            this.reconnect.html('<i class="fas fa-wifi"></i> Connected')
+            this.setReconnectBtn('connected')
             this.send({"action":"measurement.getPicoMethod"})
+            this.send({"action":"main.getVersion"})
             this.getPicoStatus()
             this.getHeatingStatus()
             this.getUpTime()
@@ -76,14 +83,13 @@ class App {
             
         };
         this.ws.onclose =  (e) => {
-            this.reconnect.removeClass('btn-success btn-danger').addClass('btn-warning')
-            this.reconnect.html('<i class="fas fa-redo"></i> Reconnect')
+            this.showAlert(`Failed to connect to ${websocketAddr}.`,'warning')
+            this.setReconnectBtn('connect')
             this.clearIntervalCallback()
             this.ws = null
         }
         this.ws.onerror = (e)=>{
-            this.reconnect.removeClass('btn-success btn-warning').addClass('btn-danger')
-            this.reconnect.html('<i class="fas fa-exclamation-circle"></i> Error')
+            this.setReconnectBtn('error')
             this.clearIntervalCallback()
             this.ws=null
         }
@@ -93,6 +99,9 @@ class App {
             let action = packet.action;
             if (packet.status==='ok') {
                 switch(action) {
+                    case 'main.getVersion':
+                        $('#system-version').text(data)
+                        break
                     case 'measurement.getPicoMethod':
                         for (let method in data) {
                             if (! (method in this.picoMethods)) {
@@ -231,10 +240,11 @@ class App {
         }, 3000));       
     }
 
-    showAlert(msg,mode,timeout=2000) {
-        let head = {danger:'error',}[mode] || mode
+    showAlert(msg,code,timeout=2000) {
+        let mode = {error:'danger', info:'success',alert:'warning'}[code] || code
+        let head = {danger:'error',}[code] || code
         let alert = `<div class="alert alert-${mode} alert-dismissible" role="alert" style='display:none'>
-            <strong>${head.toUpperCase()} </strong>
+            <strong>${head.toUpperCase()}</strong>
             <span>${msg}</span>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
@@ -260,6 +270,29 @@ class App {
         }
     }
 
+    setReconnectBtn(status){
+        switch(status){
+            case 'connected':
+                this.reconnect.removeClass('btn-outline-danger btn-danger btn-warning').addClass('btn-outline-light btn-success')
+                this.reconnect.html('<i class="fas fa-wifi"></i> Connected')
+                break
+            case 'disconnect':
+                this.reconnect.removeClass('btn-success btn-outline-light btn-warning').addClass('btn-outline-danger')
+                this.reconnect.html('<i class="fas fa-wifi"></i> Disconnect?')
+                break 
+            case 'connect':
+                this.reconnect.removeClass('btn-success btn-danger btn-outline-danger').addClass('btn-warning btn-outline-light')
+                this.reconnect.html('<i class="fas fa-redo"></i> Connect')
+                break
+            case 'error':
+                this.reconnect.removeClass('btn-success btn-warning btn-outline-danger').addClass('btn-danger btn-outline-light')
+                this.reconnect.html('<i class="fas fa-exclamation-circle"></i> Error')
+                break
+            default:
+                break
+        }
+    }
+
     addEventListener () {
        
         this.picoDevModeToggle.bootstrapSwitch('onSwitchChange',(e,state)=>{
@@ -267,11 +300,39 @@ class App {
             this.send({action:'measurement.setDevMode',devMode:state})            
         });
        
+        // select Device button
+        $('#selectDevice').on('click',e=>{
+            this.inputDialog.setTitle('Enter Reader ID (e.g. PI-QHK)')
+                            .setFields('Reader ID')
+                            .onConfirm((id)=>{
+                                if (!id.trim()){
+                                    this.showAlert('Reader ID can not be blank.','warning')
+                                    return
+                                }
+                                websocketAddr=`ws://${id.trim().toUpperCase()}.local:8765`;
+                                $('#system-id').text(`${id.trim().toUpperCase()}`)
+                            })
+                            .show()            
+                            
+        })
+
         // reconnect button
-        this.reconnect.on('click',e=>{
+        this.reconnect.on('mouseenter',e=>{
+            if ( this.ws && this.ws.readyState == 1) {
+                this.setReconnectBtn('disconnect')
+            }             
+        })
+        .on('mouseleave',e=>{
+            if ( this.ws && this.ws.readyState == 1) {
+                this.setReconnectBtn('connected')
+            }
+        })
+        .on('click',e=>{
             if ( !this.ws || this.ws.readyState != 1) {
                 this.initWebsocket()
                 this.resultTab.initWebsocket()
+            } else {
+                this.ws.close()
             }
         })
 

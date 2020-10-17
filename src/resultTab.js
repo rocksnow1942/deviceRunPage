@@ -20,7 +20,7 @@ export class ResultTab {
         this.expInput = $('#result-exp')
         this.downloadBtn = $('#result-download-btn')
         this.descInput = $('#result-desc')
-        this.initWebsocket()
+        //this.initWebsocket()
         this.addEventListener()
         this.plot()
         this.page = 0
@@ -32,11 +32,10 @@ export class ResultTab {
         this.ws = new WebSocket(websocketAddr)
 
         this.ws.onopen = e => {
-            this.requestData(0, this.perPage * 2)
-            // <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            this.requestData(0, this.perPage * 2)    
         }
         this.ws.onclose = e => {
-
+            
         }
 
         this.ws.onerror = e => {

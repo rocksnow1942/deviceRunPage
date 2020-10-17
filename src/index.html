@@ -14,9 +14,9 @@
   </div>
 
   <nav class="navbar navbar-dark bg-primary mb-4 justify-content-center" >
-    <a class='btn  btn-primary btn-outline-light btn-sm' href="/" ><i class="fas fa-home"></i> Home Page</a>
-    <a  class="navbar-brand text-center" style="padding: 0px 10px 0px 25px;"> <span id="system-id">{{sysid}} Run Test</span> <span id="system-version" style='font-size:10px'>{{version}}</span></a>
-    <a  class='btn  btn-warning btn-outline-light btn-sm' id="connectBtn" ><i class="fas fa-redo"></i> Reconnect</a> 
+    <a class='btn  btn-primary btn-outline-light btn-sm' id='selectDevice' ><i class="fas fa-laptop-code"></i> Reader ID</a>
+    <a  class="navbar-brand text-center" style="padding: 0px 10px 0px 25px;"> <span id="system-id">Reader Test</span> <span id="system-version" style='font-size:10px'></span></a>
+    <a  class='btn btn-outline-light btn-warning btn-sm' id="connectBtn" ><i class="fas fa-redo"></i> Connect</a> 
   </nav>
 
 
@@ -240,19 +240,19 @@
             <div class="input-group-prepend">
               <span class="input-group-text">Name</span>
             </div>
-            <input type="text" id='test-name' class="form-control" aria-label="Dollar amount (with dot and two decimal places)" >
+            <input type="text" id='test-name' class="form-control"   >
           </div>
           <div class="input-group input-group-sm mb-3">
             <div class="input-group-prepend">
               <span class="input-group-text">Experiment</span>
             </div>
-            <input type="text" id='test-exp' class="form-control" aria-label="Dollar amount (with dot and two decimal places)" >
+            <input type="text" id='test-exp' class="form-control"  >
           </div>
           <div class="input-group input-group-sm mb-3">
             <div class="input-group-prepend">
               <span class="input-group-text">Description</span>
             </div>
-            <input type="text" id='test-desc' class="form-control" aria-label="Dollar amount (with dot and two decimal places)" >
+            <input type="text" id='test-desc' class="form-control"  >
           </div>
 
           <hr>
@@ -273,8 +273,6 @@
       </div>
     </div>
   </div>
-
-
 
   <div id='temp-dialog' class="modal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -385,6 +383,41 @@
   </div>
 
 
+  <!-- inputDialog -->
+  <div id='input-dialog' class="modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id='input-dialog-title'>Input Dialog</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+           
+          <form id='input-dialog-form'>
+            
+          </form>
+          <hr>
+          <div class="row">
+            <div class="col-sm-6">
+              <button type="button" id='input-dialog-confirm' data-dismiss="modal" class="btn btn-block btn-outline-primary btn-sm">Confirm</button>              
+            </div>
+            
+            <div class="col-sm-6">
+              <button type="button" id='input-dialog-cancel' class="btn btn-block btn-outline-primary btn-sm" data-dismiss="modal">Cancel</button>
+            </div>
+          </div>
+
+
+        </div>
+       
+        
+      </div>
+    </div>
+  </div>
+
+
   
 
   <!-- toast -->
@@ -402,10 +435,10 @@
 
 <script>
   // use this fixed address for development.
-  //var websocketAddr = "ws://192.168.86.178:8765";
+  //var websocketAddr = "ws://pi-psf.local:8765";
   
   // change address to Jinja template for device usage.
-  var websocketAddr = "{{websocketAddr}}";
+  var websocketAddr = "";
 </script>
 
 </body>

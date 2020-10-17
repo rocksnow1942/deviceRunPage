@@ -1,11 +1,10 @@
 import $ from 'jquery';
 export class ConfirmDialog {
     constructor () {
-        this.status = false
         this.modal = $('#confirm-dialog')
         this.modalText = $('#confirm-dialog-text')
         this.cb = null
-        $('#confirm-dialog-confirm').click((e)=>{
+        $('#confirm-dialog-confirm').on('click',(e)=>{
             if (this.cb) {this.cb(); this.cb=null}
         })
         this.modal.on('hidden.bs.modal',()=>{
