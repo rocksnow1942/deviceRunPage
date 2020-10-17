@@ -83,10 +83,13 @@ class App {
             
         };
         this.ws.onclose =  (e) => {
-            this.showAlert(`Failed to connect to ${websocketAddr}.`,'warning')
+            if (!this._closeWSByUser){
+                this.showAlert(`Failed to connect to ${websocketAddr}.`,'warning')
+            }            
             this.setReconnectBtn('connect')
             this.clearIntervalCallback()
             this.ws = null
+            this._closeWSByUser = false
         }
         this.ws.onerror = (e)=>{
             this.setReconnectBtn('error')
@@ -278,15 +281,15 @@ class App {
                 break
             case 'disconnect':
                 this.reconnect.removeClass('btn-success btn-outline-light btn-warning').addClass('btn-outline-danger')
-                this.reconnect.html('<i class="fas fa-wifi"></i> Disconnect?')
+                this.reconnect.html('<i class="fas fa-exclamation-triangle"></i> Disconnect ?')
                 break 
             case 'connect':
                 this.reconnect.removeClass('btn-success btn-danger btn-outline-danger').addClass('btn-warning btn-outline-light')
-                this.reconnect.html('<i class="fas fa-redo"></i> Connect')
+                this.reconnect.html('<i class="fab fa-telegram-plane"></i> Connect')
                 break
             case 'error':
                 this.reconnect.removeClass('btn-success btn-warning btn-outline-danger').addClass('btn-danger btn-outline-light')
-                this.reconnect.html('<i class="fas fa-exclamation-circle"></i> Error')
+                this.reconnect.html('<i class="fas fa-exclamation-triangle"></i> Error')
                 break
             default:
                 break
@@ -332,6 +335,7 @@ class App {
                 this.initWebsocket()
                 this.resultTab.initWebsocket()
             } else {
+                this._closeWSByUser = true
                 this.ws.close()
             }
         })
