@@ -25,9 +25,10 @@ export class ResultTab {
         this.plot()
         this.page = 0
         this.data = []
-        this.allFetched = false
-        
+        this.allFetched = false    
     }
+
+    // websocket related.
     initWebsocket() {
         this.ws = new WebSocket(websocketAddr)
 
@@ -50,7 +51,7 @@ export class ResultTab {
             if (packet.status === 'ok') {
                 switch (action) {
                     case 'dataStore.getRecentPaginated':
-                        this.refreshBtn.html('<i class="fas fa-sync"></i>')
+                        this.showRefreshBtn('off');
                         // let oldlength = this.data.length;
                         let item = data.items;
                         this.data = _.unionBy(item, this.data, '_id')
@@ -75,8 +76,26 @@ export class ResultTab {
                         })
                         this.updatePage()
                         break
+                    case 'dataStore.getDataFromIndexes':
+                        this.showRefreshBtn('off');
+                        let item = data.items;
+                        this.data = _.unionBy(item, this.data, '_id')
+                        this.data.sort((a, b) => {
+                            let da = (new Date(a.meta.created)).getTime();
+                            let db = (new Date(b.meta.created)).getTime();
+                            return db - da
+                        })
+                        let ids = item.map(i=>i._id);
+                        let currentids = this.getCurrentSelection().map(id=>this.data[id]._id);
+                        if (_.intersection(ids,currentids).length){
+                            // if the incoming data is still being selected, update the plot.
+                            this.trace.data.datasets = this.getTraceDataset(idx)
+                            this.trace.update()
+                        }
+                        break
+
                     case "dataStore.getDataAfterIndex":
-                        this.refreshBtn.html('<i class="fas fa-sync"></i>')
+                        this.showRefreshBtn('off');
                         this.page = 0                        
                         this.data = _.unionBy(data, this.data, '_id')
                         this.data.sort((a, b) => {
@@ -99,19 +118,35 @@ export class ResultTab {
         }
 
     }
+
     send(msg) {
         if (this.ws && this.ws.readyState == 1) {
             this.ws.send(JSON.stringify(msg))
         }
     }
 
-    requestData(page, perpage) {         
-        this.refreshBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>')
-        this.send({ action: "dataStore.getRecentPaginated", page: page, "perpage": perpage, "pwd": "", returnRaw: true })       
+    
+
+
+    // UI related
+
+    showRefreshBtn(action){
+        // if action==on, spin the refresh button. otherwise turn it off.
+        switch(action){
+            case 'on':
+                this.refreshBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>')
+                break
+            case 'off':
+                this.refreshBtn.html('<i class="fas fa-sync"></i>')
+                break 
+            default:
+                this.refreshBtn.html('<i class="fas fa-sync"></i>')
+                break
+        }        
     }
 
     updatePage() {
-        // update page
+        // update the mutliselect window with the opton list
         let data = this.data.slice(this.page * this.perPage, (this.page + 1) * this.perPage)
         let options = data.map((e, i) => {
             let name = e.meta.name || e.meta.error;
@@ -128,12 +163,23 @@ export class ResultTab {
             this.nextBtn.prop('disabled', false)
         }
         if (this.page) { this.prevBtn.prop('disabled', false) } else { this.prevBtn.prop('disabled', true) }
-
     }
+
+    getCurrentSelection() {
+        return this.resultSelect.val().map(e => this.page * this.perPage + parseInt(e))
+    }
+
+
+    // data related
+    requestData(page, perpage) {         
+        this.refreshBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>')
+        this.send({ action: "dataStore.getRecentPaginated", page: page, "perpage": perpage, "pwd": "", returnRaw: false })       
+    }
+
     fetchNew() {
         // this.fetchingNewDataPage += 1        
         if (this.data.length>0){
-            this.refreshBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>')
+            this.showRefreshBtn('on')
             this.send({action:'dataStore.getDataAfterIndex',index:this.data[0]._id,pwd:"",returnRaw:true})
         } else {
             this.data=[]
@@ -142,10 +188,13 @@ export class ResultTab {
         }
     }
 
-    getCurrentSelection() {
-        return this.resultSelect.val().map(e => this.page * this.perPage + parseInt(e))
+    fetchDataFromIndexes(indexes){
+        this.showRefreshBtn('on')
+        this.send({action:'dataStore.getDataFromIndexes',indexes,pwd:"",returnRaw:true})
     }
 
+    
+    // adding actions.
     addEventListener() {
         this.nextBtn.on('click', e => {
             this.page += 1;
@@ -202,11 +251,14 @@ export class ResultTab {
                 this.nameInput.val(fD.meta.name)
                 this.expInput.val(fD.meta.exp)
                 this.descInput.val(fD.meta.desc)
+                // send the indexes with missing data to fetch:
+                let missingDataIdx = idx.filter((id)=>!this.data[id].data);
+                if (missingDataIdx.length){
+                    this.fetchDataFromIndexes(missingDataIdx.map(id=>this.data[id]._id));
+                }
                 // update plot
-
                 this.trace.data.datasets = this.getTraceDataset(idx)
                 this.trace.update()
-
             }
 
         })
@@ -239,6 +291,7 @@ export class ResultTab {
     }
 
     updatePeak(idx, channel, j) {
+        // update the peak fit panel according to cursor hover position.
         let name = this.data[idx].meta.name
         let rawdata = this.data[idx].data.scan[channel].rawdata[j]
         let step = (rawdata[0][1] - rawdata[0][0]) / (rawdata[0][2] - 1);
@@ -366,7 +419,6 @@ export class ResultTab {
                 ...currentData,
                 ...fluidFillData,
                 tempData,
-
             ]
         })
     }
@@ -556,7 +608,5 @@ export class ResultTab {
 
 
     }
-
-
 
 }

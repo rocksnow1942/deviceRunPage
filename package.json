@@ -1,6 +1,6 @@
 {
   "name": "runpage",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "for running device app",
   "main": "index.js",
   "scripts": {
