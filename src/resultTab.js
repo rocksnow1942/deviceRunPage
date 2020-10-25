@@ -47,13 +47,14 @@ export class ResultTab {
         this.ws.onmessage = e => {
             let packet = JSON.parse(e.data);
             let data = packet.data;
+            let item;
             let action = packet.action;
             if (packet.status === 'ok') {
                 switch (action) {
                     case 'dataStore.getRecentPaginated':
                         this.showRefreshBtn('off');
                         // let oldlength = this.data.length;
-                        let item = data.items;
+                        item = data.items;
                         this.data = _.unionBy(item, this.data, '_id')
                         this.data.sort((a, b) => {
                             let da = (new Date(a.meta.created)).getTime();
@@ -78,7 +79,7 @@ export class ResultTab {
                         break
                     case 'dataStore.getDataFromIndexes':
                         this.showRefreshBtn('off');
-                        let item = data.items;
+                        item = data.items;
                         this.data = _.unionBy(item, this.data, '_id')
                         this.data.sort((a, b) => {
                             let da = (new Date(a.meta.created)).getTime();
