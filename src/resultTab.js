@@ -87,10 +87,15 @@ export class ResultTab {
                             return db - da
                         })
                         let ids = item.map(i=>i._id);
-                        let currentids = this.getCurrentSelection().map(id=>this.data[id]._id);
-                        if (_.intersection(ids,currentids).length){
+                        let currentids = this.getCurrentSelection()
+                        
+                       
+                        
+                        if (_.intersection(ids,currentids.map(id=>this.data[id]._id)).length){
                             // if the incoming data is still being selected, update the plot.
-                            this.trace.data.datasets = this.getTraceDataset(idx)
+                            
+                            this.trace.data.datasets = this.getTraceDataset(currentids)
+                            
                             this.trace.update()
                         }
                         break
@@ -356,6 +361,7 @@ export class ResultTab {
     getTraceDataset(indexes) {
         // mape the selected data in menu to datasets
         // indexes is the index in this.data array.
+        
         return indexes.flatMap((dataIndex, i) => {
             let d = this.data[dataIndex];
             // generate current Data array
