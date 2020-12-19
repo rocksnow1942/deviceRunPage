@@ -1,0 +1,5 @@
+To solve the bootstrap-switch problems:
+https://github.com/Bttstrp/bootstrap-switch/issues/715
+change original importing to 
+@import "../../../../bootstrap/scss/functions";
+@import "../../../../bootstrap/scss/variables";
