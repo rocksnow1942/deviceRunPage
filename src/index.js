@@ -168,7 +168,6 @@ class App {
                         this.uptime.text(this.secondsToMinSec(data))
                         break
                     case 'dataProcess.getData':
-                        console.log('received Data');
                         this.runChart.addData(data)
                         break
                     case 'measurement.devMode':                        
