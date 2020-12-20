@@ -7,6 +7,13 @@ const OptimizeCssAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 var HtmlWebpackPlugin = require("html-webpack-plugin");
 
+const generateHtmlPlugin = title=>{
+    return new HtmlWebpackPlugin({title,filename:'index.html',template:`./src/${title}/index.html`})
+}
+const populateHtmlPlugins = (nameArray) =>{
+    return nameArray.map(name=>generateHtmlPlugin(name))
+}
+
 module.exports = merge(common, {
     mode: "production",
     output: {
@@ -18,15 +25,17 @@ module.exports = merge(common, {
         minimizer: [
             new OptimizeCssAssetsPlugin(),
             new TerserPlugin(), // minify js
-            new HtmlWebpackPlugin({
-                template: "./src/index.html",
-                filename: '../run.html',
-                minify: {
-                    removeAttributeQuotes: true,
-                    // collapseWhitespace: true,
-                    removeComments: true
-                }
-            }),
+            ...populateHtmlPlugins(['ui','run']),
+
+            // new HtmlWebpackPlugin({
+            //     template: "./src/index.html",
+            //     filename: '../run.html',
+            //     minify: {
+            //         removeAttributeQuotes: true,
+            //         // collapseWhitespace: true,
+            //         removeComments: true
+            //     }
+            // }),
             // new HtmlWebpackPlugin({
             //     template: "./src/new.html",
             //     filename: '../new.html',

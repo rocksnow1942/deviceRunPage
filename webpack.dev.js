@@ -3,12 +3,23 @@ const common = require("./webpack.common");
 const {merge} = require("webpack-merge");
 var HtmlWebpackPlugin = require("html-webpack-plugin");
 
+const generateHtmlPlugin = title=>{
+    return new HtmlWebpackPlugin({title,filename:'index.html',template:`./src/${title}/index.html`})
+}
+const populateHtmlPlugins = (nameArray) =>{
+    return nameArray.map(name=>generateHtmlPlugin(name))
+}
+
+
 module.exports = merge(common, {
     mode: "development",
     output: {
         filename: "[name].bundle.js",
         path: path.resolve(__dirname, "dist")
     },
+
+    //plugins:populateHtmlPlugins(['ui','run']),
+
     plugins: [
         new HtmlWebpackPlugin({
             template: "./src/index.html",
