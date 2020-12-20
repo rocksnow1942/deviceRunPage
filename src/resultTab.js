@@ -367,7 +367,7 @@ export class ResultTab {
             // generate current Data array
             let currentData = d.data ? (
                 _.map(d.data.scan, (data, channel) => {
-                    let xyData = _.zip(data.time, data.fit).map(([t, fit]) => ({ x: t ? t.toFixed(2) : 0, y: fit ? fit.pc.toFixed(2) : 0 }))
+                    let xyData = _.zip(data.time, data.fit).map(([t, fit]) => ({ x: t ? t.toFixed(2)/3 : 0, y: fit ? fit.pc.toFixed(2) : 0 }))
                     let color = this.color(i, channel);
                     return {
                         label: d.meta.name + '-' + channel,
@@ -399,13 +399,13 @@ export class ResultTab {
                 backgroundColor: tempcolor,
                 pointHoverBackgroundColor: tempcolor,
                 dataType: 'Temperature',
-                data: d.data ? _.zip(d.data.temperature.time, d.data.temperature.data).map(([t, temp]) => ({ x: t ? t.toFixed(2) : 0, y: temp ? temp.toFixed(2) : 0 })) : []
+                data: d.data ? _.zip(d.data.temperature.time, d.data.temperature.data).map(([t, temp]) => ({ x: t ? t.toFixed(2)/3 : 0, y: temp ? temp.toFixed(2) : 0 })) : []
             }
 
             // conditionally generate fluidFill data array
             let fluidFillData = (d.data && indexes.length == 1) ? (
                 _.map(d.data.fluidFill, (data, channel) => {
-                    let xyData = _.zip(data.time, data.data).map(([t, d]) => ({ x: t ? t.toFixed(2) : 0, y: d ? d.toFixed(2) : 0 }))
+                    let xyData = _.zip(data.time, data.data).map(([t, d]) => ({ x: t ? t.toFixed(2)/3 : 0, y: d ? d.toFixed(2) : 0 }))
                     let color =  this.color(i + 6,channel);
                     return {
                         label: d.meta.name + '-' + channel + '-FF',
