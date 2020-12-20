@@ -25,17 +25,17 @@ module.exports = merge(common, {
         minimizer: [
             new OptimizeCssAssetsPlugin(),
             new TerserPlugin(), // minify js
-            ...populateHtmlPlugins(['ui','run']),
+            // ...populateHtmlPlugins(['ui','run']),
 
-            // new HtmlWebpackPlugin({
-            //     template: "./src/index.html",
-            //     filename: '../run.html',
-            //     minify: {
-            //         removeAttributeQuotes: true,
-            //         // collapseWhitespace: true,
-            //         removeComments: true
-            //     }
-            // }),
+            new HtmlWebpackPlugin({
+                template: "./src/index.html",
+                filename: '../run.html',
+                minify: {
+                    removeAttributeQuotes: true,
+                    // collapseWhitespace: true,
+                    removeComments: true
+                }
+            }),
             // new HtmlWebpackPlugin({
             //     template: "./src/new.html",
             //     filename: '../new.html',
