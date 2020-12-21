@@ -1,3 +1,7 @@
+
+//DEMO: set scale ratio
+
+
 import $ from 'jquery';
 import _ from 'lodash';
 import {RunChart} from './runChart'
@@ -17,7 +21,6 @@ to avoid import error.
 */
 import 'bootstrap-switch/src/sass/bootstrap4/bootstrap-switch.scss'
 import 'bootstrap-switch';
-
 
 
 class App {
@@ -63,6 +66,12 @@ class App {
     }
 
     initWebsocket() {
+
+        if (websocketAddr.includes('websocketAddr')) {
+            websocketAddr = "ws://pi-aop.local:8765"
+        }
+
+        
         this.ws = new WebSocket(websocketAddr)
         // ws events 
         this.ws.onopen = (e) => {
