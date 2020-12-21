@@ -333,6 +333,11 @@ class App {
         }) 
 
         $('#start-test').on('click',e=>{
+            let w = $('#start-test').width()
+            let x = e.pageX - $('#start-test').offset().left
+            let __side = x/w<0.3333?'negative':x/w<0.6666?'normal':'positive';
+            
+            
             let method = this.method.val();
             let temp =  +document.getElementsByClassName('current-goal-temp')[0].textContent;
             let name = $('#test-name').val().trim()
@@ -343,7 +348,7 @@ class App {
                 if (name) {
                     // measurement meta info: {method, deltaT, temp, name, exp, desc}
                     this.send({
-                        meta:{method,deltaT,temp,name,exp,desc},
+                        meta:{method,deltaT,temp,name,exp,desc,__side},
                         method:method,
                         deltaT:deltaT,
                         action:'measurement.startMeasure'
