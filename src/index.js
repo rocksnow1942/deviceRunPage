@@ -1,3 +1,7 @@
+
+//DEMO: set scale ratio
+
+
 import $ from 'jquery';
 import _ from 'lodash';
 import {RunChart} from './runChart'
@@ -17,7 +21,6 @@ to avoid import error.
 */
 import 'bootstrap-switch/src/sass/bootstrap4/bootstrap-switch.scss'
 import 'bootstrap-switch';
-
 
 
 class App {
@@ -63,6 +66,12 @@ class App {
     }
 
     initWebsocket() {
+
+        if (websocketAddr.includes('websocketAddr')) {
+            websocketAddr = "ws://pi-aop.local:8765"
+        }
+
+        
         this.ws = new WebSocket(websocketAddr)
         // ws events 
         this.ws.onopen = (e) => {
@@ -168,7 +177,6 @@ class App {
                         this.uptime.text(this.secondsToMinSec(data))
                         break
                     case 'dataProcess.getData':
-                        console.log('received Data');
                         this.runChart.addData(data)
                         break
                     case 'measurement.devMode':                        
@@ -334,6 +342,11 @@ class App {
         }) 
 
         $('#start-test').on('click',e=>{
+            let w = $('#start-test').width()
+            let x = e.pageX - $('#start-test').offset().left
+            let __side = x/w<0.3333?'negative':x/w<0.6666?'normal':'positive';
+            
+            
             let method = this.method.val();
             let temp =  +document.getElementsByClassName('current-goal-temp')[0].textContent;
             let name = $('#test-name').val().trim()
@@ -344,7 +357,7 @@ class App {
                 if (name) {
                     // measurement meta info: {method, deltaT, temp, name, exp, desc}
                     this.send({
-                        meta:{method,deltaT,temp,name,exp,desc},
+                        meta:{method,deltaT,temp,name,exp,desc,__side},
                         method:method,
                         deltaT:deltaT,
                         action:'measurement.startMeasure'

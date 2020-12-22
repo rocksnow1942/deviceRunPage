@@ -61,14 +61,16 @@ export class RunChart {
         
         // update temperature
         if (data.temperature.time){
-            let tempData = _.zip(data.temperature.time,data.temperature.data).map(([t,temp])=>({x:t.toFixed(2),y:temp.toFixed(1)}))
+            //DEMO: scale data
+            let tempData = _.zip(data.temperature.time,data.temperature.data).map(([t,temp])=>({x:t.toFixed(2)/scaleRatio,y:temp.toFixed(1)}))
             this.chart.data.datasets[0].data.push(...tempData)
         }
         
         // update scan graph
         _.forEach(data.scan,(data,channel)=>{
             let dataset = _.find(this.chart.data.datasets,o=>o.label===channel)
-            let xyData = _.zip(data.time,data.fit).map(([t,fit])=>({x:t.toFixed(2),y:fit.pc.toFixed(2)}))
+            //DEMO: scale data
+            let xyData = _.zip(data.time,data.fit).map(([t,fit])=>({x:t.toFixed(2) / scaleRatio ,y:fit.pc.toFixed(2)}))
             
             if (dataset){
                 dataset.data.push(...xyData)
@@ -95,7 +97,8 @@ export class RunChart {
         // // update fluidFill
         _.forEach(data.fluidFill,(data,channel)=>{
             let dataset = _.find(this.chart.data.datasets,o=>o.label===channel+'-FF')
-            let xyData = _.zip(data.time,data.data).map(([t,d])=>({x:t.toFixed(2),y:d.toFixed(2)}))
+            //DEMO: scale data
+            let xyData = _.zip(data.time,data.data).map(([t,d])=>({x:t.toFixed(2)/scaleRatio,y:d.toFixed(2)}))
             if (dataset){
                 dataset.data.push(...xyData)
             } else {
