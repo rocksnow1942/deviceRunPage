@@ -68,7 +68,7 @@ class App {
     initWebsocket() {
 
         if (websocketAddr.includes('websocketAddr')) {
-            websocketAddr = "ws://pi-aop.local:8765"
+            websocketAddr = "ws://ams-agl.local:8765"
         }
 
         

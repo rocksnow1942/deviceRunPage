@@ -118,6 +118,12 @@ export class ResultTab {
                     case 'dataStore.deleteDataByIndex':
                         this.app.showToast(packet)
                         break
+                    case 'dataProcess.rePredictResult':
+                        console.log(data)    
+                        let index = data.index
+                        let result = data.result
+                        this.data.find(e=>e._id===index).result=result
+                        break
                     default:
                         // this.app.showToast(packet)
                         break
@@ -238,7 +244,18 @@ export class ResultTab {
                     this.updatePage()
                 })                
             }            
+        });
+
+        $('#result-repredict').on('click',e=>{
+            let index = this.getCurrentSelection()
+            if (index.length>1 || index.length===0) { return alert('Select one data to repredict.')}
+            console.log(this.data[index[0]])
+            this.send({action:'dataProcess.rePredictResult',index:this.data[index[0]]._id})
+
+
+
         })
+
 
         this.downloadBtn.on('click', e => {
             window.open('/download')
