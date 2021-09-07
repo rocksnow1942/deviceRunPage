@@ -183,11 +183,12 @@ class App {
                         this.picoDevModeToggle.bootstrapSwitch('state',data)                        
                         break
                     default:
-                        this.showToast(packet)
+                        // this.showToast(packet)
+                        console.log('run page', packet)
                         break
                 }
             } else {
-                this.showAlert(JSON.stringify(packet),'danger')
+                console.log(JSON.stringify(packet))
                 
             }
         }
@@ -239,7 +240,7 @@ class App {
         }, 3000));       
     }
 
-    showAlert(msg,mode,timeout=2000) {
+    showAlert(msg,mode,timeout=2000) {        
         let head = {danger:'error',}[mode] || mode
         let alert = `<div class="alert alert-${mode} alert-dismissible" role="alert" style='display:none'>
             <strong>${head.toUpperCase()} </strong>

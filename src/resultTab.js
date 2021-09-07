@@ -126,7 +126,7 @@ export class ResultTab {
             break;
         }
       } else {
-        this.app.showAlert(JSON.stringify(packet), "danger");
+          console.log('result page',packet);
       }
     };
   }
